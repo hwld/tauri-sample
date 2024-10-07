@@ -1,53 +1,54 @@
-import { useState } from "react";
-import reactLogo from "./assets/react.svg";
-import { invoke } from "@tauri-apps/api/core";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 import "./App.css";
+import {
+  IconEye,
+  IconInbox,
+  IconMenu2,
+  IconMessageCircle,
+  IconToggleLeft,
+  IconUserPlus,
+  type Icon,
+} from "@tabler/icons-react";
+import type { ComponentPropsWithoutRef } from "react";
 
 function App() {
-  const [greetMsg, setGreetMsg] = useState("");
-  const [name, setName] = useState("");
-
-  async function greet() {
-    // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
-    setGreetMsg(await invoke("greet", { name }));
-  }
-
   return (
-    <div className="container">
-      <h1>Welcome to Tauri!</h1>
-
-      <div className="row">
-        <a href="https://vitejs.dev" target="_blank">
-          <img src="/vite.svg" className="logo vite" alt="Vite logo" />
-        </a>
-        <a href="https://tauri.app" target="_blank">
-          <img src="/tauri.svg" className="logo tauri" alt="Tauri logo" />
-        </a>
-        <a href="https://reactjs.org" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-
-      <p>Click on the Tauri, Vite, and React logos to learn more.</p>
-
-      <form
-        className="row"
-        onSubmit={(e) => {
-          e.preventDefault();
-          greet();
-        }}
-      >
-        <input
-          id="greet-input"
-          onChange={(e) => setName(e.currentTarget.value)}
-          placeholder="Enter a name..."
-        />
-        <button type="submit">Greet</button>
-      </form>
-
-      <p>{greetMsg}</p>
+    <div
+      className="bg-neutral-800 justify-center gap-1 border py-2 border-neutral-600 w-[300px] rounded-full cursor-pointer h-[50px] shadow-lg flex items-center px-4"
+      onMouseDown={(e) => {
+        const appWindow = getCurrentWindow();
+        if (e.buttons === 1) {
+          appWindow.startDragging();
+        }
+      }}
+    >
+      <IconButton icon={IconMessageCircle} />
+      <IconButton icon={IconInbox} />
+      <Separator />
+      <IconButton icon={IconToggleLeft} />
+      <IconButton icon={IconEye} />
+      <Separator />
+      <IconButton icon={IconUserPlus} />
+      <IconButton icon={IconMenu2} />
     </div>
   );
 }
 
 export default App;
+
+const Separator: React.FC = () => {
+  return <div className="w-[2px] rounded-lg bg-neutral-700 h-full" />;
+};
+
+const IconButton: React.FC<
+  { icon: Icon } & ComponentPropsWithoutRef<"button">
+> = ({ icon: Icon, ...props }) => {
+  return (
+    <button
+      {...props}
+      className="size-10 text-sm grid place-items-center transition-colors hover:bg-white/10 rounded-full text-neutral-200"
+    >
+      <Icon className="size-6" />
+    </button>
+  );
+};

@@ -12,12 +12,15 @@
   "app": {
     "windows": [
       {
-        "title": "tauri-sample",
-        "width": 800,
-        "height": 600
-        
+        "width": 300,
+        "height": 50,
+        "resizable": false,
+        "transparent": true,
+        "decorations": false,
+        "alwaysOnTop": true
       }
     ],
+    "macOSPrivateApi": true,
     "security": {
       "csp": null
     }
