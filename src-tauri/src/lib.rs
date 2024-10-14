@@ -1,6 +1,7 @@
 use tauri::{
-    menu::{Menu, MenuItem},
-    tray::TrayIconBuilder,
+    menu::{MenuBuilder, MenuItem},
+    tray::{MouseButton, TrayIconBuilder},
+    Emitter,
 };
 use tauri::{AppHandle, Manager};
 use tauri_nspanel::{
@@ -14,7 +15,7 @@ pub const TASK_ACTION_BAR_LABEL: &str = "task_action_bar";
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![hide])
+        .invoke_handler(tauri::generate_handler![hide, show_task])
         .plugin(tauri_nspanel::init())
         .setup(|app| {
             let panel = app
@@ -78,15 +79,54 @@ pub fn run() {
             )?;
             app.global_shortcut().register(shortcut_key)?;
 
+            let open_main_i = MenuItem::with_id(
+                app,
+                "open_main",
+                "メインウィンドウを開く",
+                true,
+                None::<&str>,
+            )?;
+            let open_task_action_bar_i = MenuItem::with_id(
+                app,
+                "open_task_action_bar_i",
+                "タスクアクションバーを開く",
+                true,
+                Some("Shift+Control+O"),
+            )?;
             let quit_i = MenuItem::with_id(app, "quit", "終了する", true, None::<&str>)?;
-            let menu = Menu::with_items(app, &[&quit_i])?;
+            let menu = MenuBuilder::new(app)
+                .items(&[&open_main_i, &open_task_action_bar_i])
+                .separator()
+                .item(&quit_i)
+                .build()
+                .unwrap();
 
             let _ = TrayIconBuilder::new()
+                .menu_on_left_click(false)
                 .icon(app.default_window_icon().unwrap().clone())
                 .menu(&menu)
-                .on_menu_event(|app, event| match event.id.as_ref() {
-                    "quit" => {
+                .on_tray_icon_event(|icon, event| match event {
+                    tauri::tray::TrayIconEvent::Click { button, .. }
+                        if button == MouseButton::Left =>
+                    {
+                        let window = icon.app_handle().get_webview_window(MAIN_LABEL).unwrap();
+                        window.show().unwrap();
+                        window.set_focus().unwrap();
+                    }
+                    _ => {}
+                })
+                .on_menu_event(move |app, event| match event.id.as_ref() {
+                    id if id == quit_i.id().as_ref() => {
                         app.exit(0);
+                    }
+                    id if id == open_main_i.id().as_ref() => {
+                        let window = app.get_webview_window(MAIN_LABEL).unwrap();
+                        window.show().unwrap();
+                        window.set_focus().unwrap();
+                    }
+                    id if id == open_task_action_bar_i.id().as_ref() => {
+                        let panel = app.get_webview_panel(TASK_ACTION_BAR_LABEL).unwrap();
+                        panel.show();
                     }
                     _ => {}
                 })
@@ -112,7 +152,9 @@ pub fn run() {
                 ..
             } => {
                 if !has_visible_windows {
-                    app.get_webview_window(MAIN_LABEL).unwrap().show().unwrap();
+                    let window = app.get_webview_window(MAIN_LABEL).unwrap();
+                    window.show().unwrap();
+                    window.set_focus().unwrap();
                 }
             }
             _ => {}
@@ -126,4 +168,16 @@ fn hide(app_handle: AppHandle) {
     if panel.is_visible() {
         panel.order_out(None);
     }
+}
+
+#[tauri::command]
+fn show_task(app_handle: AppHandle, task: String) {
+    let main_window = app_handle.get_webview_window(MAIN_LABEL).unwrap();
+    let task_action_bar = app_handle.get_webview_panel(TASK_ACTION_BAR_LABEL).unwrap();
+
+    task_action_bar.order_out(None);
+    main_window.show().unwrap();
+    main_window.set_focus().unwrap();
+
+    main_window.emit("task", task).unwrap();
 }
