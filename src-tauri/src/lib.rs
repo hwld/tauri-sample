@@ -8,13 +8,20 @@ use tauri_nspanel::{
     panel_delegate, ManagerExt, WebviewWindowExt,
 };
 
+pub const MAIN_LABEL: &str = "main";
+pub const TASK_ACTION_BAR_LABEL: &str = "task_action_bar";
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![hide])
         .plugin(tauri_nspanel::init())
         .setup(|app| {
-            let panel = app.get_webview_window("sub").unwrap().to_panel().unwrap();
+            let panel = app
+                .get_webview_window(TASK_ACTION_BAR_LABEL)
+                .unwrap()
+                .to_panel()
+                .unwrap();
 
             panel.set_level(NSMainMenuWindowLevel + 1);
 
@@ -54,7 +61,8 @@ pub fn run() {
                         if shortcut == &shortcut_key {
                             match event.state() {
                                 ShortcutState::Pressed => {
-                                    let panel = _app.get_webview_panel("sub").unwrap();
+                                    let panel =
+                                        _app.get_webview_panel(TASK_ACTION_BAR_LABEL).unwrap();
 
                                     if panel.is_visible() {
                                         panel.order_out(None);
@@ -88,7 +96,7 @@ pub fn run() {
         })
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::CloseRequested { api, .. } = event {
-                if window.label() == "main" {
+                if window.label() == MAIN_LABEL {
                     api.prevent_close();
                     window.hide().unwrap();
                 }
@@ -104,7 +112,7 @@ pub fn run() {
                 ..
             } => {
                 if !has_visible_windows {
-                    app.get_webview_window("main").unwrap().show().unwrap();
+                    app.get_webview_window(MAIN_LABEL).unwrap().show().unwrap();
                 }
             }
             _ => {}
@@ -113,7 +121,7 @@ pub fn run() {
 
 #[tauri::command]
 fn hide(app_handle: AppHandle) {
-    let panel = app_handle.get_webview_panel("sub").unwrap();
+    let panel = app_handle.get_webview_panel(TASK_ACTION_BAR_LABEL).unwrap();
 
     if panel.is_visible() {
         panel.order_out(None);

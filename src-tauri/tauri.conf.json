@@ -17,13 +17,13 @@
         "url": "main.html"
       },
       {
-        "label": "sub",
+        "label": "task_action_bar",
         "resizable": false,
         "decorations": false,
         "width": 400,
         "height": 50,
         "visible": false,
-        "url": "sub.html",
+        "url": "task-action-bar.html",
         "transparent": true
       }
     ],
