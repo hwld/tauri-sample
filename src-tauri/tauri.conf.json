@@ -12,6 +12,19 @@
   "app": {
     "windows": [
       {
+        "label": "main",
+        "visible": true,
+        "url": "main.html"
+      },
+      {
+        "label": "sub",
+        "resizable": false,
+        "decorations": false,
+        "width": 400,
+        "height": 50,
+        "visible": false,
+        "url": "sub.html",
+        "transparent": true
       }
     ],
     "macOSPrivateApi": true,
