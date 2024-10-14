@@ -1,15 +1,8 @@
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import "./App.css";
-import {
-  IconEye,
-  IconInbox,
-  IconMenu2,
-  IconMessageCircle,
-  IconToggleLeft,
-  IconUserPlus,
-  type Icon,
-} from "@tabler/icons-react";
-import type { ComponentPropsWithoutRef } from "react";
+import { IconAlarm, type Icon } from "@tabler/icons-react";
+import { type ComponentPropsWithoutRef } from "react";
+import { hide } from "@tauri-apps/api/app";
 
 function App() {
   return (
@@ -18,18 +11,32 @@ function App() {
       onMouseDown={(e) => {
         const appWindow = getCurrentWindow();
         if (e.buttons === 1) {
-          appWindow.startDragging();
+          // appWindow.startDragging();
         }
       }}
     >
-      <IconButton icon={IconMessageCircle} />
-      <IconButton icon={IconInbox} />
-      <Separator />
-      <IconButton icon={IconToggleLeft} />
-      <IconButton icon={IconEye} />
-      <Separator />
-      <IconButton icon={IconUserPlus} />
-      <IconButton icon={IconMenu2} />
+      <IconAlarm className="text-neutral-500 size-8" />
+      <input
+        className="bg-transparent focus-visible:outline-none w-full placeholder:text-neutral-500"
+        placeholder="タスクを入力してください..."
+        onMouseDown={(e) => e.stopPropagation()}
+        onKeyDown={() => console.log("key")}
+      />
+      <button
+        className="rounded p-2 bg-blue-500"
+        onClick={() => {
+          hide();
+        }}
+      >
+        Hide
+      </button>
+      <button
+        onClick={() => {
+          getCurrentWindow().close();
+        }}
+      >
+        Close
+      </button>
     </div>
   );
 }
