@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import "./App.css";
-import { listen } from "@tauri-apps/api/event";
+import { events } from "./gen/bindings";
 
 export const App = () => {
 	const [tasks, setTasks] = useState<string[]>([]);
 
 	useEffect(() => {
-		const unlistenPromise = listen("task", (e) => {
+		const unlistenPromise = events.showTaskEvent.listen((e) => {
 			const task = e.payload as string;
 			if (task === "!reset") {
 				setTasks([]);

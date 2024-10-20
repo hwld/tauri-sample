@@ -1,15 +1,15 @@
 import { IconAlarm } from "@tabler/icons-react";
-import { invoke } from "@tauri-apps/api/core";
 import { useEffect } from "react";
 import "./App.css";
 import { getCurrentWindow } from "@tauri-apps/api/window";
+import { commands } from "./gen/bindings";
 
 export const Bar: React.FC = () => {
 	useEffect(() => {
 		const handleEscape = (e: KeyboardEvent) => {
 			if (e.key === "Escape") {
 				e.preventDefault();
-				invoke("hide");
+				commands.hide();
 			}
 		};
 
@@ -30,7 +30,7 @@ export const Bar: React.FC = () => {
 		const formData = new FormData(e.currentTarget);
 		const task = formData.get("task")?.toString() ?? "";
 
-		invoke("show_task", { task });
+		commands.showTask(task);
 		e.currentTarget.reset();
 	};
 

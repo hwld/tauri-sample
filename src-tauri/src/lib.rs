@@ -1,23 +1,41 @@
+use serde::{Deserialize, Serialize};
+use specta_typescript::Typescript;
 use tauri::{
     menu::{MenuBuilder, MenuItem},
     tray::{MouseButton, TrayIconBuilder},
-    Emitter,
 };
 use tauri::{AppHandle, Manager};
 use tauri_nspanel::{
     cocoa::appkit::{NSMainMenuWindowLevel, NSWindowCollectionBehavior},
     panel_delegate, ManagerExt, WebviewWindowExt,
 };
+use tauri_specta::{Builder, Event};
 
 pub const MAIN_LABEL: &str = "main";
 pub const TASK_ACTION_BAR_LABEL: &str = "task_action_bar";
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    let builder = Builder::<tauri::Wry>::new()
+        .commands(tauri_specta::collect_commands![hide, show_task])
+        .events(tauri_specta::collect_events![ShowTaskEvent]);
+
+    #[cfg(debug_assertions)]
+    builder
+        .export(
+            Typescript::default()
+                .formatter(specta_typescript::formatter::prettier)
+                .header("// @ts-nocheck"),
+            "../src/gen/bindings.ts",
+        )
+        .expect("Failed to export typescript bindings");
+
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![hide, show_task])
+        .invoke_handler(builder.invoke_handler())
         .plugin(tauri_nspanel::init())
-        .setup(|app| {
+        .setup(move |app| {
+            builder.mount_events(app);
+
             let panel = app
                 .get_webview_window(TASK_ACTION_BAR_LABEL)
                 .unwrap()
@@ -162,6 +180,7 @@ pub fn run() {
 }
 
 #[tauri::command]
+#[specta::specta]
 fn hide(app_handle: AppHandle) {
     let panel = app_handle.get_webview_panel(TASK_ACTION_BAR_LABEL).unwrap();
 
@@ -170,7 +189,11 @@ fn hide(app_handle: AppHandle) {
     }
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone, specta::Type, tauri_specta::Event)]
+pub struct ShowTaskEvent(String);
+
 #[tauri::command]
+#[specta::specta]
 fn show_task(app_handle: AppHandle, task: String) {
     let main_window = app_handle.get_webview_window(MAIN_LABEL).unwrap();
     let task_action_bar = app_handle.get_webview_panel(TASK_ACTION_BAR_LABEL).unwrap();
@@ -179,5 +202,5 @@ fn show_task(app_handle: AppHandle, task: String) {
     main_window.show().unwrap();
     main_window.set_focus().unwrap();
 
-    main_window.emit("task", task).unwrap();
+    ShowTaskEvent(task).emit(&main_window).ok();
 }
